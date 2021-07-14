@@ -1,120 +1,36 @@
-using System;
-using System.Collections.Generic;
-using System.Threading;
-
-namespace RefactoringGuru.DesignPatterns.Observer.Conceptual
+namespace Weather.Observer
 {
-    public interface IObserver
+    using System.Collections.Generic;
+
+    public abstract class WeatherSubject
     {
-        // Recebe uma atualização do subject
-        void Update(ISubject subject);
-    }
+        #region Fields
 
-    public interface ISubject
-    {
-        // Atrela um observador ao subject.
-        void Attach(IObserver observer);
+        private List<IWeatherObserver> observers = new List<IWeatherObserver>();
 
-        // Desatrela um observador do subject.
-        void Detach(IObserver observer);
+        #endregion Fields
 
-        // Notifica todos os observadores sobre um evento.
-        void Notify();
-    }
+        #region Methods
 
-    // O Subject possui algum estado importante e notifica os observadores quando o estado muda.
-    public class Subject : ISubject
-    {
-        /* Para simplificar, o estado do Subject, que é essencial para todos
-        os inscritos, é armazenado nessa variável */
-        public int State { get; set; } = -0;
-
-        /* Lista de inscritos. Na vida real, a lista de inscritos pode ser
-        armazenada de forma mais compreensível (categorizada por tipo de evento, etc.). */
-        private List<IObserver> _observers = new List<IObserver>();
-
-        // Métodos de gerenciamento de inscrição.
-        public void Attach(IObserver observer)
+        public void NotifyObservers(WeatherData data)
         {
-            Console.WriteLine("Subject: Atrelou um observador.");
-            this._observers.Add(observer);
-        }
-
-        public void Detach(IObserver observer)
-        {
-            this._observers.Remove(observer);
-            Console.WriteLine("Subject: Desatrelou um observador.");
-        }
-
-        // Notifica uma atualização para cada inscrito.
-        public void Notify()
-        {
-            Console.WriteLine("Subject: Notificando observadores...");
-
-            foreach (var observer in _observers)
+            foreach (var weatherObserver in observers)
             {
-                observer.Update(this);
+                weatherObserver.Update(data);
             }
         }
 
-        /* Geralmente, a lógica de inscrição é apenas uma fração do que um Subject
-        pode realmente fazer. Os Subjects comumente possuem uma lógica de negócios importante,
-        que ativa um método de notificação sempre que algo importante está prestes a
-        acontecer (ou após isso). */
-        public void SomeBusinessLogic()
+        public void RegisterObserver(IWeatherObserver o)
         {
-            Console.WriteLine("\nSubject: Fazendo algo importante.");
-            this.State = new Random().Next(0, 10);
-
-            Thread.Sleep(15);
-
-            Console.WriteLine("Subject: Meu estado mudou para: " + this.State);
-            this.Notify();
+            observers.Add(o);
         }
-    }
 
-    /* Observadores concretos reagem às atualizações informadas pelo Subject que eles
-    foram atrelados */
-    class ConcreteObserverA : IObserver
-    {
-        public void Update(ISubject subject)
-        {            
-            if ((subject as Subject).State < 3)
-            {
-                Console.WriteLine("ConcreteObserverA: Reagiu ao evento.");
-            }
-        }
-    }
-
-    class ConcreteObserverB : IObserver
-    {
-        public void Update(ISubject subject)
+        public void RemoveObserver(IWeatherObserver o)
         {
-            if ((subject as Subject).State == 0 || (subject as Subject).State >= 2)
-            {
-                Console.WriteLine("ConcreteObserverB: Reagiu ao evento.");
-            }
+            if (observers.Contains(o))
+                observers.Remove(o);
         }
-    }
-    
-    class Program
-    {
-        static void Main(string[] args)
-        {
-            // Código do cliente.
-            var subject = new Subject();
-            var observerA = new ConcreteObserverA();
-            subject.Attach(observerA);
 
-            var observerB = new ConcreteObserverB();
-            subject.Attach(observerB);
-
-            subject.SomeBusinessLogic();
-            subject.SomeBusinessLogic();
-
-            subject.Detach(observerB);
-
-            subject.SomeBusinessLogic();
-        }
+        #endregion Methods
     }
 }
